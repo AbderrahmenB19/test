@@ -1,0 +1,14 @@
+version: '3.9'
+services:
+  postgres:
+    container_name: postgres-sql
+    image: postgres
+    environment:
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_USER=test
+      - POSTGRES_DB=test
+    ports:
+      - 5433:5432
+
+    restart: unless-stopped
+

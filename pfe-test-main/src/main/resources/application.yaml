@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    username:
+    password:
+    url:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    
+  application:
+           name: pfe_testing
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/pfe
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: your-email@gmail.com
+    password: your-app-password
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+    from: your-email@gmail.com
+
+keycloak:
+  auth-server-url: http://localhost:8080
+  realm: pfe
+  client-id: admin-cli
+  client-secret: your-client-secret
+  username: admin
+  password: admin
+  grant-type: password
