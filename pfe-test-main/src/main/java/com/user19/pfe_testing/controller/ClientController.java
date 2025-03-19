@@ -1,6 +1,7 @@
 package com.user19.pfe_testing.controller;
 
 import com.user19.pfe_testing.dto.ProcessHistoryDTO;
+import com.user19.pfe_testing.dto.RapportDTO;
 import com.user19.pfe_testing.dto.SubmissionDTO;
 import com.user19.pfe_testing.service.ProcessService;
 
@@ -21,8 +22,8 @@ public class ClientController {
         return ResponseEntity.ok("ur request submitted successfully");
     }
     @GetMapping("/process-History")
-    public ResponseEntity<List<ProcessHistoryDTO>> getProcessHistory() {
-        return ResponseEntity.ok(processService.getProcessHistory());
+    public ResponseEntity<List<RapportDTO>> getReports() {
+        return ResponseEntity.ok(processService.getAllRapportDTO());
     }
 
 }

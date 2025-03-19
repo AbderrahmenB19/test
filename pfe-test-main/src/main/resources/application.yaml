@@ -1,14 +1,18 @@
 spring:
   datasource:
-    username:
-    password:
-    url:
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: test
+    password: test
+    url: jdbc:postgresql://localhost:5433/test
+    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
-    
+    properties:
+      hibernate:
+        format_sql: true
+    database: postgresql
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
   application:
            name: pfe_testing
   security:
@@ -27,6 +31,9 @@ spring:
           auth: true
           starttls:
             enable: true
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
     from: your-email@gmail.com
 
 keycloak:
@@ -37,3 +44,6 @@ keycloak:
   username: admin
   password: admin
   grant-type: password
+
+server:
+  port: 8090

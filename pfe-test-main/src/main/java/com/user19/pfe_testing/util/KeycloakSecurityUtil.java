@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class KeycloakSecurityUtil {
     private final Keycloak keycloak;
-    private final String realm_name="my_realm";
+    private final String realm_name="pfe";
     public  String getCurrentUserId() {
         JwtAuthenticationToken auth = (JwtAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
         Jwt jwt = (Jwt) auth.getCredentials();
