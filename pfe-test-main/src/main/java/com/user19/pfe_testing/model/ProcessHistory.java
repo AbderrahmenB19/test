@@ -1,6 +1,7 @@
 package com.user19.pfe_testing.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.user19.pfe_testing.model.enums.ProcessStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
@@ -21,6 +22,8 @@ public class ProcessHistory {
 
     private String action;
     private String comments;
+    private ProcessStatus actionStatus;     //TODO for other classes to update process status
+    
     @Column(name = "timestamp", nullable = false, updatable = false)
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;

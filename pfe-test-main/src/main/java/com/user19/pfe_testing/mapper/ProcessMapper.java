@@ -1,6 +1,6 @@
 package com.user19.pfe_testing.mapper;
 
-import com.user19.pfe_testing.dto.ProcessDefinitionResponseDTO;
+
 import com.user19.pfe_testing.model.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;

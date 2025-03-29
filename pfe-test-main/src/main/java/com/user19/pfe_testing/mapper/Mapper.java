@@ -6,6 +6,8 @@ import com.user19.pfe_testing.model.*;
 import com.user19.pfe_testing.util.MathUtil;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
+
 @Component
 public class Mapper {
 
@@ -54,9 +56,19 @@ public class Mapper {
                 .build();
     }
     public ProcessInstanceDTO processInstanceToDTO(ProcessInstance processInstance) {
+        if (processInstance == null || processInstance.getHistory() == null || processInstance.getHistory().isEmpty()) {
+            throw new IllegalArgumentException("Invalid process instance or history is empty.");
+        }
+
+        var firstHistory = processInstance.getHistory().getFirst();
+        var lastHistory = processInstance.getHistory().getLast();
+        String rejectComment = Optional.ofNullable(lastHistory.getComments()).orElse("");
+
         return ProcessInstanceDTO.builder()
-                .processInstanceId(processInstance.getId())
+                .id(processInstance.getId())
                 .formData(processInstance.getFormData())
+                .createdAt(firstHistory.getTimestamp())
+                .rejectionComment(rejectComment)
                 .build();
     }
     private boolean testRequiredApprovalIsValid(String requiredApproval){
@@ -65,6 +77,12 @@ public class Mapper {
         }
         return requiredApproval.equals("ALL") || requiredApproval.equals("ANY") || MathUtil.isNumeric(requiredApproval);
 
+    }
+    public FormSchemaDTO formSchemaToDTO(FormSchema formSchema) {
+        return FormSchemaDTO.builder()
+                .id(formSchema.getId())
+                .jsonSchema(formSchema.getJsonSchema())
+                .build();
     }
 }
 

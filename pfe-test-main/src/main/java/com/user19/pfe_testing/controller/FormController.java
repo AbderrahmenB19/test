@@ -1,0 +1,44 @@
+package com.user19.pfe_testing.controller;
+
+import com.user19.pfe_testing.dto.FormSchemaDTO;
+import com.user19.pfe_testing.dto.SubmissionDTO;
+import com.user19.pfe_testing.service.FormService;
+import com.user19.pfe_testing.service.ProcessService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/form")
+@RequiredArgsConstructor
+public class FormController {
+    private final ProcessService processService;
+    private final FormService formService;
+    @GetMapping("/form-schema")
+    public ResponseEntity<FormSchemaDTO> getFormSchema() {
+        return ResponseEntity.ok(formService.getFormSchema());
+
+    }
+    @PostMapping("/form-schema")
+    public ResponseEntity<String> saveFormSchema(@RequestBody FormSchemaDTO formSchemaDTO) {
+        formService.saveFormSchema(formSchemaDTO);
+        return ResponseEntity.ok("formschema saved");
+
+    }
+
+    @PostMapping
+    public ResponseEntity<String> submit(@RequestBody SubmissionDTO submissionDTO) {
+        processService.startProcess(submissionDTO);
+        return ResponseEntity.ok("ur request submitted successfully");
+    }
+    @PutMapping("/form-schema")
+    public ResponseEntity<String> updateFormSchema(
+            @RequestBody FormSchemaDTO formSchemaDTO) {
+        formService.updateFormSchema(formSchemaDTO);
+        return ResponseEntity.ok("Form schema updated successfully.");
+    }
+
+
+
+}

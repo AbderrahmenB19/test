@@ -6,13 +6,14 @@ import org.hibernate.annotations.GenericGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
+@Entity
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Entity
 public class ProcessDefinition {
+
     @Id
     @GeneratedValue(generator = "UUID")
     @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
@@ -22,9 +23,9 @@ public class ProcessDefinition {
     private String name;
 
     @OneToOne
+    @JoinColumn(name = "form_schema_id", referencedColumnName = "id", unique = true)
     private FormSchema formSchema;
 
     @OneToMany(mappedBy = "processDefinition", cascade = CascadeType.ALL)
     private List<ProcessStep> steps = new ArrayList<>();
-
 }

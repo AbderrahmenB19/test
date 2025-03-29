@@ -18,10 +18,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +32,7 @@ public class ProcessService {
     private final ProcessInstanceRepository processInstanceRepository;
     private final ProcessHistoryRepository processHistoryRepository;
     private final EmailService emailService;
+    private final FormService formService;
 
 
     public void startProcess(SubmissionDTO submissionDTO) {
@@ -135,45 +133,36 @@ public class ProcessService {
 
     }
 
-    public void saveProcessDefinition(ProcessDefinitionDTO processDefinitionDTO, FormSchemaDTO formSchemaDTO) {
-        FormSchema savedFormSchema = saveFormSchema(formSchemaDTO);
-
-        ProcessDefinition processDefinitionSaved = processDefinitionRepository.save(ProcessDefinition.builder().name(processDefinitionDTO.getName()).formSchema(savedFormSchema).build());
-
-        List<ProcessStep> steps = processDefinitionDTO.getSteps().stream().map(stepDTO -> mapper.convertStepDTOToEntity(stepDTO, processDefinitionSaved)).collect(Collectors.toList());
-
-        processStepRepository.saveAll(steps);
-
+    public void saveProcessDefinition(ProcessDefinitionDTO processDefinitionDTO) {
+        if (processDefinitionRepository.count() > 0) {
+            throw new IllegalStateException("A process definition already exists. Use update instead.");
+        }
+        ProcessDefinition processDefinition = ProcessDefinition.builder()
+                .name(processDefinitionDTO.getName())
+                .build();
+        processDefinitionRepository.save(processDefinition);
     }
 
     public void updateProcessDefinition(ProcessDefinitionDTO processDefinitionDTO) {
+        ProcessDefinition processDefinition = processDefinitionRepository.findAll().stream().findFirst()
+                .orElseThrow(() -> new EntityNotFoundException("No process definition found to update."));
 
-
-        ProcessDefinition processDefinitionSaved = processDefinitionRepository.findById(processDefinitionDTO.getId()).orElseThrow(() -> new EntityNotFoundException("No process with Id" + processDefinitionDTO.getId()));
-        processDefinitionSaved.setName(processDefinitionDTO.getName());
-        List<ProcessStep> steps = processDefinitionDTO.getSteps().stream().map(stepDTO -> mapper.convertStepDTOToEntity(stepDTO, processDefinitionSaved)).collect(Collectors.toList());
-
-        processStepRepository.saveAll(steps);
-
+        processDefinition.setName(processDefinitionDTO.getName());
+        processDefinitionRepository.save(processDefinition);
     }
 
-    public FormSchema saveFormSchema(FormSchemaDTO formSchemaRequest) {
-        FormSchema formschema = FormSchema.builder().jsonSchema(formSchemaRequest.getJsonSchema()).build();
-        return formSchemaRepository.save(formschema);
-    }
 
-    public FormSchema updateFormSchema(FormSchemaDTO formSchemaRequest) {
-        FormSchema formschema = formSchemaRepository.findById(formSchemaRequest.getId()).orElseThrow(() -> new EntityNotFoundException("No form schema with Id" + formSchemaRequest.getId()));
-        formschema.setJsonSchema(formSchemaRequest.getJsonSchema());
-        return formSchemaRepository.save(formschema);
 
-    }
-    public void addLogsToProcessHistory(ProcessInstance processInstance , String action,String actorId,String comment){
+
+
+
+    public void addLogsToProcessHistory(ProcessInstance processInstance , String action,String actorId,String comment,ProcessStatus actionStatus){
 
         ProcessHistory processHistory= ProcessHistory.builder()
                 .processInstance(processInstance)
                 .action(action)
                 .actorId(actorId)
+                .actionStatus(actionStatus)
                 .timestamp(LocalDateTime.now())
                 .comments(comment)
                 .build();
@@ -197,6 +186,7 @@ public class ProcessService {
                 ).toList();
     }
     public List<RapportDTO> getAllRapportDTO(){
+        String processDefinitionName= processDefinitionRepository.findAll().getFirst().getName();
         String currentUserId= keycloakSecurityUtil.getCurrentUserId();
         List<ProcessInstance> processInstances= processInstanceRepository.findByActorId(currentUserId);
         List<RapportDTO>  rapportDTOs= new ArrayList<>();
@@ -205,6 +195,7 @@ public class ProcessService {
                     rapportDTOs.add(RapportDTO
                             .builder()
                                     .processInstanceId(processInstance.getId())
+                                    .processName(processDefinitionName)
                                     .processHistoryDTOList(processInstance.getHistory().stream()
                                             .map(mapper::processHistoryToDTO).toList())
                             .build());
@@ -214,5 +205,10 @@ public class ProcessService {
     }
 
 
-
+    public void cancelRequest(String id) {
+        ProcessInstance processInstance =processInstanceRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Process Instance not found: " + id));
+        processInstance.setStatus(ProcessStatus.CANCELLED);
+        String currentUserId= keycloakSecurityUtil.getCurrentUserId();
+        addLogsToProcessHistory(processInstance,"cancelRequest",currentUserId,null, ProcessStatus.CANCELLED);
+    }
 }
