@@ -1,10 +1,12 @@
 package com.user19.pfe_testing.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.util.UUID;
+
 @Entity
 @Table(name = "form_schemas")
 @Getter
@@ -15,14 +17,15 @@ import java.util.UUID;
 public class FormSchema {
 
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(columnDefinition = "CHAR(36)")
-    private String id;
+    @GeneratedValue
 
-    @Column(columnDefinition = "LONGTEXT")
+    private Long id;
+
+    @Column(columnDefinition = "TEXT")
     private String jsonSchema;
 
-    @OneToOne(mappedBy = "formSchema", cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "process_definition_id", referencedColumnName = "id", unique = true)
+    @JsonIgnore
     private ProcessDefinition processDefinition;
 }

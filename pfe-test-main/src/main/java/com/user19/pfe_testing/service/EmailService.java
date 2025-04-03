@@ -1,5 +1,6 @@
 package com.user19.pfe_testing.service;
 
+import com.user19.pfe_testing.model.ApprovalStep;
 import com.user19.pfe_testing.model.NotificationStep;
 import com.user19.pfe_testing.util.KeycloakSecurityUtil;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,8 @@ public class EmailService {
     private final JavaMailSender mailSender;
     private final KeycloakSecurityUtil keycloakSecurityUtil;
 
-    @Value("${spring.mail.from}")
+
+    @Value("${spring.mail.username}")
     private String fromEmail;
 
     @Async
@@ -60,9 +62,8 @@ public class EmailService {
         sendEmail(clientEmail, subject, content);
     }
 
-    public void notifyValidators(NotificationStep notificationStep) {
-        Set<String> validatorRoles = new HashSet<>(notificationStep.getRecipients());
-        List<String> validatorEmails= keycloakSecurityUtil.getValidatorsEmailsByRoles(validatorRoles);
+    public void notifyValidators(ApprovalStep approvalStep) {
+        List<String> validatorEmails= keycloakSecurityUtil.getValidatorsEmailsByRoles(new HashSet<>(approvalStep.getValidatorRoles()));
 
         String subject = "New Validation Request";
         String content = "<h3>Dear Validator,</h3>" +
@@ -70,5 +71,17 @@ public class EmailService {
                 "<p>Please log in to the system to take action.</p>";
 
         validatorEmails.forEach(email -> sendEmail(email, subject, content));
+    }
+    public void notifyReciptients(NotificationStep notificationStep) {
+
+
+        String subject = "New Notification ";
+
+
+
+        notificationStep.getRecipients().forEach(email -> sendEmail(email, subject, String.format(
+
+                        "<p>%s</p>" ,notificationStep.getMessage()
+                )));
     }
 }

@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProcessDefinitionRepository extends JpaRepository<ProcessDefinition,String> {
+public interface ProcessDefinitionRepository extends JpaRepository<ProcessDefinition,Long> {
 
-    Optional<ProcessDefinition> findByFormSchemaId(String formSchemaId);
+    Optional<ProcessDefinition> findByFormSchemaId(Long formSchemaId);
 
 
 }

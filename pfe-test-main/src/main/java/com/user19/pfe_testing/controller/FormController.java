@@ -4,19 +4,28 @@ import com.user19.pfe_testing.dto.FormSchemaDTO;
 import com.user19.pfe_testing.dto.SubmissionDTO;
 import com.user19.pfe_testing.service.FormService;
 import com.user19.pfe_testing.service.ProcessService;
+import com.user19.pfe_testing.util.KeycloakSecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 @RestController
 @RequestMapping("/form")
 @RequiredArgsConstructor
+
 public class FormController {
     private final ProcessService processService;
     private final FormService formService;
-    @GetMapping("/form-schema")
+    private final  KeycloakSecurityUtil keycloakSecurityUtil;
+
+
+    @GetMapping
     public ResponseEntity<FormSchemaDTO> getFormSchema() {
+        System.out.println(keycloakSecurityUtil.getCurrentUserRoles());
+        System.out.println(keycloakSecurityUtil.getValidatorsEmailsByRoles(Set.of("MANAGER")));
         return ResponseEntity.ok(formService.getFormSchema());
 
     }
@@ -36,6 +45,7 @@ public class FormController {
     public ResponseEntity<String> updateFormSchema(
             @RequestBody FormSchemaDTO formSchemaDTO) {
         formService.updateFormSchema(formSchemaDTO);
+        System.out.println(formSchemaDTO.getJsonSchema());
         return ResponseEntity.ok("Form schema updated successfully.");
     }
 

@@ -4,32 +4,42 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.user19.pfe_testing.model.enums.ProcessStatus;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.GenericGenerator;
-
 import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Builder
+@Table(name = "process_history")
 public class ProcessHistory {
+
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(columnDefinition = "CHAR(36)")
-    private String id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @Column(updatable = false)
+    private Long id;
 
     private String action;
+
     private String comments;
-    private ProcessStatus actionStatus;     //TODO for other classes to update process status
-    
-    @Column(name = "timestamp", nullable = false, updatable = false)
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+
+    @Enumerated(EnumType.STRING)
+    private ProcessStatus actionStatus;
+
+    @Column(nullable = false, updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
 
     @ManyToOne
     private ProcessInstance processInstance;
 
     private String actorId;
+
+    @PrePersist
+    protected void setTimestamp() {
+        if (timestamp == null) {
+            timestamp = LocalDateTime.now();
+        }
+    }
 }

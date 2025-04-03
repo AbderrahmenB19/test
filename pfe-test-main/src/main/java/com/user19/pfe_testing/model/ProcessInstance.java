@@ -16,20 +16,25 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 @Entity
+
 public class ProcessInstance {
+
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(columnDefinition = "CHAR(36)")
-    private String id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
+
     private String currentStepName;
-    @Column(columnDefinition = "LONGTEXT")
+
     private String formData;
+
     @Enumerated(EnumType.STRING)
     private ProcessStatus status;
+
     @ManyToOne
     private ProcessDefinition processDefinition;
+
     @OneToMany(mappedBy = "processInstance", cascade = CascadeType.ALL)
-    private List<ProcessHistory> history = new ArrayList<>();
+    private List<ProcessHistory> history ;
+
     private String actorId;
 }

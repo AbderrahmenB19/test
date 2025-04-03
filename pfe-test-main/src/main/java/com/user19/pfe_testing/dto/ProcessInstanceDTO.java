@@ -1,16 +1,16 @@
 package com.user19.pfe_testing.dto;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ProcessInstanceDTO {
-    private String id;
+    private Long id;
     private String status;
     private LocalDateTime createdAt;
     private LocalDateTime decisionDate;

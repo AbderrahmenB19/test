@@ -6,44 +6,52 @@ spring:
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
+
       ddl-auto: update
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
+        id:
+          uuid_generator_strategy: org.hibernate.id.uuid.StandardRandomStrategy
         format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
     database: postgresql
     database-platform: org.hibernate.dialect.PostgreSQLDialect
+
   application:
            name: pfe_testing
   security:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/pfe
+          issuer-uri: http://localhost:9090/realms/pfe
+
+
   mail:
     host: smtp.gmail.com
     port: 587
-    username: your-email@gmail.com
-    password: your-app-password
+    username: abderrahmenbennacer622@gmail.com
+    password: lyaybzextiealols
     properties:
       mail:
         smtp:
           auth: true
           starttls:
             enable: true
+            required: true
           connectiontimeout: 5000
-          timeout: 3000
+          timeout: 5000
           writetimeout: 5000
-    from: your-email@gmail.com
+
 
 keycloak:
-  auth-server-url: http://localhost:8080
-  realm: pfe
-  client-id: admin-cli
-  client-secret: your-client-secret
-  username: admin
-  password: admin
-  grant-type: password
+  auth-server-url: http://localhost:9090
 
+  realm: pfe
+  resource: pfe-client
+  credentials:
+    secret: a5TKC4ooSI8LsOH9Lg0C32JfahiUJhUf
+
+  use-resource-role-mappings: true
 server:
   port: 8090

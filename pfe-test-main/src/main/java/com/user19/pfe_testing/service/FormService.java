@@ -40,7 +40,8 @@ public class FormService {
     }
 
     public FormSchemaDTO getFormSchema(){
-        return mapper.formSchemaToDTO(formSchemaRepository.findAll().getFirst());
+        if(formSchemaRepository.count()>0) return mapper.formSchemaToDTO(formSchemaRepository.findAll().getFirst());
+        else return null;
     }
 
 }

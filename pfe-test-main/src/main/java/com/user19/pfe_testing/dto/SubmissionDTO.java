@@ -1,7 +1,7 @@
 package com.user19.pfe_testing.dto;
 
 public record SubmissionDTO(
-        String formSchemaId,
+        Long formSchemaId,
         String formData
 ) {
 }

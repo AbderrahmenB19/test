@@ -1,27 +1,27 @@
 package com.user19.pfe_testing.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.user19.pfe_testing.model.Condition;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 @Getter
 @Setter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProcessStepDTO {
+    private Long id;
     private String name;
-    private String stepType;
+    private String stepType;//NOTIFY,APPROVAL,CONDITION
     private List<String> validatorRoles;
-    private String requiredApproval;
-    private List<Condition> condition;
-    private List<String> recipients;
+    private String requiredApproval; //ANY,ALL,number for validator need
+    private List<ConditionDTO> condition;
+    private List<String> recipients; //List of email if step NOTIFY
     private String message;
 
 
-    public ProcessStepDTO(String name, String stepType) {
-        this.name = name;
-        this.stepType = stepType;
-    }
+
 }
 

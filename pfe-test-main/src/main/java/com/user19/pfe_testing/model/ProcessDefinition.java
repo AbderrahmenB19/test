@@ -1,8 +1,10 @@
 package com.user19.pfe_testing.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.UuidGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,17 +17,15 @@ import java.util.List;
 public class ProcessDefinition {
 
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(columnDefinition = "CHAR(36)")
-    private String id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    private Long id;
 
     private String name;
 
-    @OneToOne
-    @JoinColumn(name = "form_schema_id", referencedColumnName = "id", unique = true)
+    @OneToOne(mappedBy = "processDefinition", cascade = CascadeType.ALL)
+
     private FormSchema formSchema;
 
-    @OneToMany(mappedBy = "processDefinition", cascade = CascadeType.ALL)
-    private List<ProcessStep> steps = new ArrayList<>();
+    @OneToMany(mappedBy = "processDefinition", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ProcessStep> steps= new ArrayList<>() ;
 }

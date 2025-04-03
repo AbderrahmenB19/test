@@ -12,14 +12,14 @@ import org.hibernate.annotations.GenericGenerator;
 @Builder
 public class Condition {
     @Id
-    @GeneratedValue(generator = "UUID")
-    @GenericGenerator(name = "UUID", strategy = "org.hibernate.id.UUIDGenerator")
-    @Column(columnDefinition = "CHAR(36)")
-    private String conditionId;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+
+    private Long conditionId;
+
     private String condition;
     private String targetStep;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "condition_step_id")
     private ConditionStep conditionStep;
-
 }

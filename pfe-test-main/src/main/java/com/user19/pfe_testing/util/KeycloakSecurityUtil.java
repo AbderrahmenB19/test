@@ -28,8 +28,8 @@ public class KeycloakSecurityUtil {
     }
 
     public Set<String> getCurrentUserRoles() {
-        KeycloakAuthenticationToken authentication =
-                (KeycloakAuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+        JwtAuthenticationToken  authentication =
+                (JwtAuthenticationToken ) SecurityContextHolder.getContext().getAuthentication();
         return authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());

@@ -1,6 +1,7 @@
 package com.user19.pfe_testing.dto;
 
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.util.List;
@@ -9,10 +10,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProcessDefinitionDTO {
-    private String id;
+    private Long id;
     private String name;
-    private FormSchemaDTO formSchema;
     private List<ProcessStepDTO> steps;
 
 }

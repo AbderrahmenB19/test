@@ -15,9 +15,6 @@ import java.util.List;
 @DiscriminatorValue("NOTIFY")
 public class NotificationStep extends ProcessStep {
     @ElementCollection
-    @Column(columnDefinition = "LONGTEXT")
     private List<String> recipients;
-
-    @Column(columnDefinition = "LONGTEXT")
     private String message;
 }

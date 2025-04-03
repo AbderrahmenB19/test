@@ -17,28 +17,20 @@ public class KeycloakConfig {
     @Value("${keycloak.realm}")
     private String realm;
 
-    @Value("${keycloak.client-id}")
+    @Value("${keycloak.resource}") // or client-id
     private String clientId;
 
-    @Value("${keycloak.client-secret}")
+    @Value("${keycloak.credentials.secret}")
     private String clientSecret;
-
-    @Value("${keycloak.username}")
-    private String adminUsername;
-
-    @Value("${keycloak.password}")
-    private String adminPassword;
 
     @Bean
     public Keycloak keycloak() {
         return KeycloakBuilder.builder()
                 .serverUrl(authServerUrl)
                 .realm(realm)
-                .grantType(OAuth2Constants.PASSWORD)
+                .grantType(OAuth2Constants.CLIENT_CREDENTIALS)
                 .clientId(clientId)
                 .clientSecret(clientSecret)
-                .username(adminUsername)
-                .password(adminPassword)
                 .build();
     }
 }

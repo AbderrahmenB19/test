@@ -1,18 +1,13 @@
 package com.user19.pfe_testing.dto;
 
-
 import lombok.*;
 
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Getter
-@Setter
-
-public class FormSchemaDTO{
-    private Long id;
-    private String jsonSchema;
-
-
+public class ConditionDTO {
+    String condition;
+    String targetStep;
 }
-

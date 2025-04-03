@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ApprovalStepRepository extends JpaRepository<ApprovalStep, String> {
+public interface ApprovalStepRepository extends JpaRepository<ApprovalStep, Long> {
     Optional<ApprovalStep> findByName(String name);
 
 

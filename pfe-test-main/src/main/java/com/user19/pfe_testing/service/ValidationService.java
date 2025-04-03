@@ -31,20 +31,21 @@ public class ValidationService {
 
     public List<ProcessInstanceDTO> getAllPendingProcess() {
         return processInstanceRepository.findAll().stream()
+                .filter(p->p.getStatus() == ProcessStatus.PENDING)
                 .filter(process -> isValidatorOfCurrentStep(getCurrentStepFromProcess(process), process))
                 .map(mapper::processInstanceToDTO)
                 .toList();
     }
 
 
-    public void approve(String processInstanceId) {
+    public void approve(Long processInstanceId) {
         ProcessInstance processInstance = getProcessInstanceById(processInstanceId);
         ApprovalStep currentApprovalStep = getApprovalStepByName(processInstance.getCurrentStepName());
 
         String actorId = keycloakSecurityUtil.getCurrentUserId();
         String action = currentApprovalStep.getName();
 
-        processService.addLogsToProcessHistory(processInstance, action, actorId, "", ProcessStatus.APPROVED);
+        processService.addProcessHistory(processInstance, action, actorId, "", ProcessStatus.APPROVED);
 
         if (shouldMoveToNextStep(processInstance, currentApprovalStep, action)) {
             processService.moveNextStep(processInstanceId);
@@ -52,7 +53,7 @@ public class ValidationService {
     }
 
 
-    public void reject(String processInstanceId, String comment) {
+    public void reject(Long processInstanceId, String comment) {
         ProcessInstance processInstance = getProcessInstanceById(processInstanceId);
         ApprovalStep currentApprovalStep = getApprovalStepByName(processInstance.getCurrentStepName());
 
@@ -60,7 +61,7 @@ public class ValidationService {
         String action = currentApprovalStep.getName();
 
         processInstance.setStatus(ProcessStatus.REJECTED);
-        processService.addLogsToProcessHistory(processInstance, action, actorId, comment, ProcessStatus.REJECTED);
+        processService.addProcessHistory(processInstance, action, actorId, comment, ProcessStatus.REJECTED);
     }
 
 
@@ -75,7 +76,7 @@ public class ValidationService {
         };
     }
 
-    private ProcessInstance getProcessInstanceById(String processInstanceId) {
+    private ProcessInstance getProcessInstanceById(Long processInstanceId) {
         return processInstanceRepository.findById(processInstanceId)
                 .orElseThrow(() -> new EntityNotFoundException("Process instance not found: " + processInstanceId));
     }
@@ -92,7 +93,9 @@ public class ValidationService {
     private boolean isValidatorOfCurrentStep(ProcessStep processStep, ProcessInstance processInstance) {
         if (processStep instanceof ApprovalStep approvalStep) {
             Set<String> userRoles = keycloakSecurityUtil.getCurrentUserRoles();
-            Set<String> requiredValidatorRoles = new HashSet<>(approvalStep.getValidatorRoles());
+
+            Set<String> requiredValidatorRoles = new HashSet<>(approvalStep.getValidatorRoles()).stream().map(e->"ROLE_" + e).collect(Collectors.toSet());
+
 
             return userRoles.stream().anyMatch(requiredValidatorRoles::contains) &&
                     !hasValidatorApprovedStep(processStep, processInstance);

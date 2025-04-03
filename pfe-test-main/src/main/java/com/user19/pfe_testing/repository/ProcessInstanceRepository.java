@@ -6,9 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
-public interface ProcessInstanceRepository extends JpaRepository<ProcessInstance, String > {
+public interface ProcessInstanceRepository extends JpaRepository<ProcessInstance, Long > {
      ProcessInstance findByActorIdAndStatus(String actorId, ProcessStatus processStatus);
-    List<ProcessInstance> findByActorId(String actorId);
+     List<ProcessInstance> findByActorId(String actorId);
 }

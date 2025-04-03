@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 
 @Repository
-public interface ProcessHistoryRepository extends JpaRepository<ProcessHistory,String> {
+public interface ProcessHistoryRepository extends JpaRepository<ProcessHistory,Long> {
     List<ProcessHistory> findByProcessInstanceAndAction(ProcessInstance processInstance, String action);
     List<ProcessHistory>  findByActorIdAndActionStatus(String actorId, ProcessStatus actionStatus);
 
