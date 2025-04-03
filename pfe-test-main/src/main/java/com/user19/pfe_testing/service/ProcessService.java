@@ -7,7 +7,7 @@ import com.user19.pfe_testing.mapper.Mapper;
 import com.user19.pfe_testing.model.*;
 import com.user19.pfe_testing.model.enums.ProcessStatus;
 import com.user19.pfe_testing.repository.*;
-import com.user19.pfe_testing.util.ConditionEvaluator;
+
 import com.user19.pfe_testing.util.KeycloakSecurityUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -38,8 +38,8 @@ public class ProcessService {
     private final ApprovalStepRepository approvalStepRepository;
     private final NotificationStepRepository notificationStepRepository;
     private final ConditionStepRepository conditionStepRepository;
-    private final ConditionRepository conditionRepository;
-
+    private final ConditionEval conditionEval;
+    @Transactional
     public void startProcess(SubmissionDTO submissionDTO) {
         ProcessDefinition processDefinition = processDefinitionRepository.findByFormSchemaId(submissionDTO.formSchemaId())
                 .orElseThrow(() -> new EntityNotFoundException("Process definition not found"));
@@ -76,7 +76,6 @@ public class ProcessService {
         }
         else if (currentProcessStep instanceof ConditionStep) {
             handleConditionStep((ConditionStep) currentProcessStep, processInstance);
-            return;
         }
         else if (currentProcessStep instanceof ApprovalStep) {
             handleApprovalStep((ApprovalStep) currentProcessStep);
@@ -87,7 +86,9 @@ public class ProcessService {
 
     public void moveNextStep(Long processInstanceId) {
         ProcessInstance processInstance = getProcessInstanceById(processInstanceId);
+        System.out.println("uuuuuuuuuuuuu-id ");
         String currentStepName = processInstance.getCurrentStepName();
+        System.out.println(currentStepName);
 
         if (isLastStep(currentStepName, processInstance)) {
             handleLastStep(processInstance);
@@ -122,7 +123,7 @@ public class ProcessService {
 
     private void handleConditionStep(ConditionStep conditionStep, ProcessInstance processInstance) {
         for (Condition condition : conditionStep.getConditions()) {
-            if (evaluateCondition(processInstance.getFormData(), condition.getCondition())) {
+            if (conditionEval.evaluateCondition(processInstance.getFormData(), condition.getCondition())) {
                 updateCurrentStepFromCondition(processInstance.getId(), condition.getTargetStep());
                 break;
             }
@@ -160,11 +161,16 @@ public class ProcessService {
     private void updateCurrentStepFromCondition(Long processInstanceId, String stepName) {
         ProcessInstance processInstance = getProcessInstanceById(processInstanceId);
         validateStepExists(processInstance, stepName);
-        System.out.println("sssssssssssssssssssssssssssssssssssss");
-        System.out.println(stepName);
-
+        //System.out.println("sssssssssssssssssssssssssssssssssssss");
+        //System.out.println(processInstance);
+        //System.out.println(stepName);
+        //System.out.println("updateeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
         processInstance.setCurrentStepName(stepName);
-        processInstanceRepository.save(processInstance);
+        System.out.println("updateeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        ProcessInstance Repo = processInstanceRepository.save(processInstance);
+        System.out.println(Repo.getId());
+        System.out.println("updateeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+        System.out.println(Repo.getCurrentStepName());
     }
 
     private boolean isLastStep(String currentStepName, ProcessInstance processInstance) {
