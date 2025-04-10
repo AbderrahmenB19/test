@@ -5,20 +5,17 @@ import com.user19.pfe_testing.model.NotificationStep;
 import com.user19.pfe_testing.util.KeycloakSecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.keycloak.representations.idm.UserRepresentation;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
+
 
 @Service
 @RequiredArgsConstructor

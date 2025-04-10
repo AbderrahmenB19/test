@@ -2,14 +2,10 @@ package com.user19.pfe_testing.controller;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.user19.pfe_testing.dto.FormSchemaDTO;
 import com.user19.pfe_testing.dto.ProcessDefinitionDTO;
-import com.user19.pfe_testing.dto.RapportDTO;
-import com.user19.pfe_testing.dto.SubmissionDTO;
-import com.user19.pfe_testing.model.ProcessDefinition;
+import com.user19.pfe_testing.dto.ReportDTO;
 import com.user19.pfe_testing.repository.ProcessStepRepository;
 import com.user19.pfe_testing.service.ProcessService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +20,8 @@ public class ProcessController {
     private final ProcessStepRepository processStepRepository;
 
     @GetMapping
-    public ResponseEntity<List<RapportDTO>> getReports() {
-        return ResponseEntity.ok(processService.getAllRapports());
+    public ResponseEntity<List<ReportDTO>> getReports() {
+        return ResponseEntity.ok(processService.getAllReports());
     }
     @PatchMapping("cancel-request/{id}")
     public ResponseEntity<String> cancelRequest(@PathVariable Long id) {

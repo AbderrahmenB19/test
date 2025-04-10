@@ -48,7 +48,7 @@ public class ValidationService {
         processService.addProcessHistory(processInstance, action, actorId, "", ProcessStatus.APPROVED);
 
         if (shouldMoveToNextStep(processInstance, currentApprovalStep, action)) {
-            processService.moveNextStep(processInstanceId);
+            processService.moveToNextStep(processInstanceId);
         }
     }
 

@@ -11,36 +11,36 @@ import java.util.List;
 @Getter
 @Setter
 @AllArgsConstructor
-public class RapportDTO {
+public class ReportDTO {
     private Long processInstanceId;
     private String processName;
     private LocalDateTime startTime;
     private List<ProcessHistoryDTO> processHistoryDTOList;
     private ProcessStatus currentStatus;
 
-    public static class RapportDTOBuilder {
+    public static class ReportDTOBuilder {
         private Long processInstanceId;
         private String processName;
         private LocalDateTime startTime;
         private List<ProcessHistoryDTO> processHistoryDTOList;
         private ProcessStatus currentStatus;
 
-        public RapportDTOBuilder processInstanceId(Long processInstanceId) {
+        public ReportDTOBuilder processInstanceId(Long processInstanceId) {
             this.processInstanceId = processInstanceId;
             return this;
         }
 
-        public RapportDTOBuilder processName(String processName) {
+        public ReportDTOBuilder processName(String processName) {
             this.processName = processName;
             return this;
         }
 
-        public RapportDTOBuilder processHistoryDTOList(List<ProcessHistoryDTO> processHistoryDTOList) {
+        public ReportDTOBuilder processHistoryDTOList(List<ProcessHistoryDTO> processHistoryDTOList) {
             this.processHistoryDTOList = processHistoryDTOList;
             return this;
         }
 
-        public RapportDTO build() {
+        public ReportDTO build() {
             if (processHistoryDTOList != null && !processHistoryDTOList.isEmpty()) {
                 this.startTime = processHistoryDTOList.get(0).getTimestamp();
                 this.currentStatus = processHistoryDTOList.stream()
@@ -49,7 +49,7 @@ public class RapportDTO {
                         .orElseThrow(() -> new RuntimeException("No valid process history found"))
                         .getActionStatus();
             }
-            return new RapportDTO(processInstanceId, processName, startTime, processHistoryDTOList, currentStatus);
+            return new ReportDTO(processInstanceId, processName, startTime, processHistoryDTOList, currentStatus);
         }
     }
 }
