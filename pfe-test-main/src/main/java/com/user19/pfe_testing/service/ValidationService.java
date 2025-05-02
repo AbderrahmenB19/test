@@ -30,10 +30,16 @@ public class ValidationService {
 
 
     public List<ProcessInstanceDTO> getAllPendingProcess() {
+
         return processInstanceRepository.findAll().stream()
                 .filter(p->p.getStatus() == ProcessStatus.PENDING)
                 .filter(process -> isValidatorOfCurrentStep(getCurrentStepFromProcess(process), process))
-                .map(mapper::processInstanceToDTO)
+                .map(e->{
+                    ApprovalStep approvalStep = approvalStepRepository.findByName(e.getCurrentStepName()).orElseThrow(()-> new EntityNotFoundException("ApprovalStep not found"));
+                    Long formId = approvalStep.getFormId();
+                    return mapper.processInstanceToDTO(e, formId);
+
+                })
                 .toList();
     }
 
@@ -122,8 +128,12 @@ public class ValidationService {
 
     private List<ProcessInstanceDTO> getProcessInstancesByValidatorAndStatus(String currentUserId, ProcessStatus status) {
         return processHistoryRepository.findByActorIdAndActionStatus(currentUserId, status).stream()
-                .map(ProcessHistory::getProcessInstance)
-                .map(mapper::processInstanceToDTO)
+                .map(e->{
+                    ApprovalStep approvalStep = approvalStepRepository.findByName(e.getAction()).orElseThrow(()->new EntityNotFoundException("Approval step not found"));
+                    Long formId = approvalStep.getFormId();
+                    return mapper.processInstanceToDTO(e.getProcessInstance(), formId);
+                })
+
                 .collect(Collectors.toList());
     }
 }

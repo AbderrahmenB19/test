@@ -55,4 +55,7 @@ public class KeycloakSecurityUtil {
     }
 
 
+    public String getUserNameById(String actorId) {
+        return keycloak.realm(realm_name).users().get(actorId).toRepresentation().getUsername();
+    }
 }

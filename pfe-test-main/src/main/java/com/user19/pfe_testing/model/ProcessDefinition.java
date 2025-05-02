@@ -19,13 +19,8 @@ public class ProcessDefinition {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
-
     private String name;
-
-    @OneToOne(mappedBy = "processDefinition", cascade = CascadeType.ALL)
-
-    private FormSchema formSchema;
-
+    private Long formSchemaId;
     @OneToMany(mappedBy = "processDefinition", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ProcessStep> steps= new ArrayList<>() ;
 }

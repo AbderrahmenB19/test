@@ -14,6 +14,7 @@ import java.util.List;
 public class ProcessDefinitionDTO {
     private Long id;
     private String name;
+    private Long formId;
     private List<ProcessStepDTO> steps;
 
 }

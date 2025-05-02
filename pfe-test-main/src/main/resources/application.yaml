@@ -39,18 +39,14 @@ spring:
           starttls:
             enable: true
             required: true
-          connectiontimeout: 5000
-          timeout: 5000
-          writetimeout: 5000
 
 
 keycloak:
   auth-server-url: http://localhost:9090
-
   realm: pfe
-  resource: pfe-client
+  resource: pfe-backend-client
   credentials:
-    secret: a5TKC4ooSI8LsOH9Lg0C32JfahiUJhUf
+    secret: ZxPYUmr6zEEDGGCinjz1Hinpqi6GoNid
 
   use-resource-role-mappings: true
 server:

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -23,9 +24,10 @@ public class FormSchema {
 
     @Column(columnDefinition = "TEXT")
     private String jsonSchema;
+    private String name;
+    private String description;
+    private LocalDateTime lastUpdate;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "process_definition_id", referencedColumnName = "id", unique = true)
-    @JsonIgnore
-    private ProcessDefinition processDefinition;
+
+
 }

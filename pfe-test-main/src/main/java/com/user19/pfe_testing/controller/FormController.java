@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -22,11 +23,18 @@ public class FormController {
     private final  KeycloakSecurityUtil keycloakSecurityUtil;
 
 
-    @GetMapping
-    public ResponseEntity<FormSchemaDTO> getFormSchema() {
+    @GetMapping("/form-schema/{id}")
+    public ResponseEntity<FormSchemaDTO> getFormSchema(@PathVariable("id") Long id ) {
         System.out.println(keycloakSecurityUtil.getCurrentUserRoles());
         System.out.println(keycloakSecurityUtil.getValidatorsEmailsByRoles(Set.of("MANAGER")));
-        return ResponseEntity.ok(formService.getFormSchema());
+        return ResponseEntity.ok(formService.getFormSchema(id));
+
+    }
+    @GetMapping("/form-schema")
+    public ResponseEntity<List  <FormSchemaDTO>> getAllFormSchema() {
+        System.out.println(keycloakSecurityUtil.getCurrentUserRoles());
+
+        return ResponseEntity.ok(formService.getAllFormSchema());
 
     }
     @PostMapping("/form-schema")

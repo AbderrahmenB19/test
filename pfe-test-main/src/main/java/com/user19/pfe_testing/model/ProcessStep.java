@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Entity
 @SuperBuilder
-@Table(name = "process_step")
+
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "step_type")
 public abstract class ProcessStep {
@@ -20,8 +20,10 @@ public abstract class ProcessStep {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column(unique = true, length = 100)
+    @Column(length = 100)
     private String name;
+
+    private Long formId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "process_definition_id")

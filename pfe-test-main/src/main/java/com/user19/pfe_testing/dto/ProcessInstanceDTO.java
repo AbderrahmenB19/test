@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 public class ProcessInstanceDTO {
     private Long id;
     private String status;
+    private Long FormId;
+    private String processName;
+    private String requesterName;
     private LocalDateTime createdAt;
     private LocalDateTime decisionDate;
     private String formData;

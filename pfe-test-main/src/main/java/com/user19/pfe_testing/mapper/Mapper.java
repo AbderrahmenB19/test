@@ -3,19 +3,26 @@ package com.user19.pfe_testing.mapper;
 
 import com.user19.pfe_testing.dto.*;
 import com.user19.pfe_testing.model.*;
+import com.user19.pfe_testing.util.KeycloakSecurityUtil;
 import com.user19.pfe_testing.util.MathUtil;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class Mapper {
+    private final KeycloakSecurityUtil keycloakSecurityUtil;
 
 
     public ProcessStep convertStepDTOToEntity(ProcessStepDTO stepDTO, ProcessDefinition processDefinition) {
+        System.out.println(stepDTO.getFormId());
         switch (stepDTO.getStepType()) {
             case "APPROVAL":
                 ApprovalStep approvalStep = new ApprovalStep();
+                if (stepDTO.getId()!=null)   approvalStep.setId(stepDTO.getId());
+                approvalStep.setFormId(stepDTO.getFormId());
                 approvalStep.setName(stepDTO.getName());
                 approvalStep.setValidatorRoles(stepDTO.getValidatorRoles());
                 String requiredApproval= stepDTO.getRequiredApproval();
@@ -28,9 +35,12 @@ public class Mapper {
 
             case "CONDITION":
 
+
                 ConditionStep conditionStep = new ConditionStep();
+                if (stepDTO.getId()!=null)  conditionStep.setId(stepDTO.getId());
+                conditionStep.setFormId(stepDTO.getFormId());
                 conditionStep.setName(stepDTO.getName());
-                //conditionStep.setConditions( stepDTO.getCondition().stream().map(this::conditionDTOToEntity).toList());
+
                 conditionStep.setProcessDefinition(processDefinition);
                 if(stepDTO.getId()!=null) conditionStep.setId(stepDTO.getId());
                 return conditionStep;
@@ -38,7 +48,9 @@ public class Mapper {
             case "NOTIFY":
 
                 NotificationStep notificationStep = new NotificationStep();
+                if (stepDTO.getId()!=null)  notificationStep.setId(stepDTO.getId());
                 notificationStep.setName(stepDTO.getName());
+                notificationStep.setFormId(stepDTO.getFormId());
                 notificationStep.setRecipients(stepDTO.getRecipients());
                 notificationStep.setMessage(stepDTO.getMessage());
                 notificationStep.setProcessDefinition(processDefinition);
@@ -53,6 +65,7 @@ public class Mapper {
 
         ProcessStepDTO stepDTO = new ProcessStepDTO();
         stepDTO.setName(step.getName());
+        if(step.getId()!=null) stepDTO.setId(step.getId());
         if( step instanceof ApprovalStep){
             stepDTO.setStepType("APPROVAL");
             stepDTO.setRequiredApproval(((ApprovalStep) step).getRequiredApproval());
@@ -82,7 +95,7 @@ public class Mapper {
                 .timestamp(processHistory.getTimestamp())
                 .build();
     }
-    public ProcessInstanceDTO processInstanceToDTO(ProcessInstance processInstance) {
+    public ProcessInstanceDTO processInstanceToDTO(ProcessInstance processInstance, Long FormId) {
         if (processInstance == null || processInstance.getHistory() == null || processInstance.getHistory().isEmpty()) {
             throw new IllegalArgumentException("Invalid process instance or history is empty.");
         }
@@ -92,10 +105,13 @@ public class Mapper {
         String rejectComment = Optional.ofNullable(lastHistory.getComments()).orElse("");
 
         return ProcessInstanceDTO.builder()
+                .requesterName(keycloakSecurityUtil.getUserNameById(processInstance.getActorId()))
+                .processName(processInstance.getProcessDefinition().getName())
                 .id(processInstance.getId())
                 .formData(processInstance.getFormData())
                 .createdAt(firstHistory.getTimestamp())
                 .rejectionComment(rejectComment)
+                .FormId(FormId)
                 .build();
     }
     private boolean testRequiredApprovalIsValid(String requiredApproval){
@@ -107,6 +123,9 @@ public class Mapper {
     }
     public FormSchemaDTO formSchemaToDTO(FormSchema formSchema) {
         return FormSchemaDTO.builder()
+                .description(formSchema.getDescription())
+                .name(formSchema.getName())
+                .lastUpdate(formSchema.getLastUpdate())
                 .id(formSchema.getId())
                 .jsonSchema(formSchema.getJsonSchema())
                 .build();

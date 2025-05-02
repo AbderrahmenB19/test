@@ -20,9 +20,15 @@ public class ProcessController {
     private final ProcessStepRepository processStepRepository;
 
     @GetMapping
-    public ResponseEntity<List<ReportDTO>> getReports() {
+    public ResponseEntity<List<ReportDTO>> getAllCurrentUserReport() {
+        return ResponseEntity.ok(processService.getAllCurrentUserReport());
+    }
+    @GetMapping("/all")
+    public ResponseEntity<List<ReportDTO>> getAllReports() {
         return ResponseEntity.ok(processService.getAllReports());
     }
+
+
     @PatchMapping("cancel-request/{id}")
     public ResponseEntity<String> cancelRequest(@PathVariable Long id) {
         processService.cancelRequest(id);
@@ -30,8 +36,8 @@ public class ProcessController {
 
     }
     @GetMapping("/process-definition")
-    public ResponseEntity<ProcessDefinitionDTO> getProcessDefinition() {
-        ProcessDefinitionDTO response = processService.getProcessDefinition();
+    public ResponseEntity<List<ProcessDefinitionDTO>> getAllProcessDefinition() {
+        List<ProcessDefinitionDTO> response = processService.getAllProcessDefinition();
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         return ResponseEntity.ok(response);
@@ -42,10 +48,22 @@ public class ProcessController {
         processService.saveProcessDefinition(processDefinitionDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body("Process  saved successfully.");
     }
+    @PostMapping("/process-definition/all")
+    public ResponseEntity<String> saveAllProcessDefinition(
+            @RequestBody List<ProcessDefinitionDTO> processDefinitionsDTO) {
+        processService.saveAllProcessDefinition(processDefinitionsDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Process  saved successfully.");
+    }
     @PutMapping("/process-definition")
     public ResponseEntity<String> updateProcessDefinition(
              @RequestBody ProcessDefinitionDTO processDefinitionDTO) {
         processService.updateProcessDefinition(processDefinitionDTO);
+        return ResponseEntity.status(HttpStatus.OK).body("Process  updated successfully.");
+    }
+    @PutMapping("/process-definition/all")
+    public ResponseEntity<String> updateAllProcessDefinition(
+            @RequestBody List<ProcessDefinitionDTO> processDefinitionsDTO) {
+        processService.updateAllProcessDefinition(processDefinitionsDTO);
         return ResponseEntity.status(HttpStatus.OK).body("Process  updated successfully.");
     }
     @PutMapping("/clear")

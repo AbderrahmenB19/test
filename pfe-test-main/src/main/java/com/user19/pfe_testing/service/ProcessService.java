@@ -1,8 +1,6 @@
 package com.user19.pfe_testing.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 import com.user19.pfe_testing.dto.*;
 import com.user19.pfe_testing.mapper.Mapper;
 import com.user19.pfe_testing.model.*;
@@ -12,15 +10,13 @@ import com.user19.pfe_testing.util.ConditionEvaluator;
 import com.user19.pfe_testing.util.KeycloakSecurityUtil;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.core.convert.support.DefaultConversionService;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.expression.spel.support.StandardTypeConverter;
+
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.*;
+
 import java.util.stream.Collectors;
 
 @Service
@@ -40,9 +36,10 @@ public class ProcessService {
     private final ConditionStepRepository conditionStepRepository;
     private final ConditionEvaluator conditionEvaluator;
 
+
     @Transactional
     public void startProcess(SubmissionDTO submissionDTO) {
-        ProcessDefinition processDefinition = processDefinitionRepository.findByFormSchemaId(submissionDTO.formSchemaId())
+            ProcessDefinition processDefinition = processDefinitionRepository.findById(submissionDTO.processDefenitionId())
                 .orElseThrow(() -> new EntityNotFoundException("Process definition not found"));
 
         String currentUserId = keycloakSecurityUtil.getCurrentUserId();
@@ -140,12 +137,9 @@ public class ProcessService {
     }
 
     public void saveProcessDefinition(ProcessDefinitionDTO processDefinitionDTO) {
-        if (processDefinitionRepository.count() > 0) {
-            throw new IllegalStateException("A process definition already exists. Use update instead.");
-        }
-
         ProcessDefinition processDefinition = ProcessDefinition.builder()
                 .name(processDefinitionDTO.getName())
+                .formSchemaId(processDefinitionDTO.getFormId())
                 .build();
 
         ProcessDefinition savedDefinition = processDefinitionRepository.save(processDefinition);
@@ -154,11 +148,15 @@ public class ProcessService {
 
     public void saveProcessSteps(ProcessDefinition definition, ProcessDefinitionDTO processDefinitionDTO) {
         for (ProcessStepDTO stepDTO : processDefinitionDTO.getSteps()) {
-            switch (stepDTO.getStepType()) {
-                case "APPROVAL" -> saveApprovalSteps(definition, stepDTO);
-                case "CONDITION" -> saveConditionSteps(definition, stepDTO);
-                case "NOTIFY" -> saveNotificationSteps(definition, stepDTO);
-            }
+            saveProcessStep(definition, stepDTO);
+        }
+    }
+
+    private void saveProcessStep(ProcessDefinition definition, ProcessStepDTO stepDTO) {
+        switch (stepDTO.getStepType()) {
+            case "APPROVAL" -> saveApprovalSteps(definition, stepDTO);
+            case "CONDITION" -> saveConditionSteps(definition, stepDTO);
+            case "NOTIFY" -> saveNotificationSteps(definition, stepDTO);
         }
     }
 
@@ -181,27 +179,87 @@ public class ProcessService {
             conditionStep.getConditions().add(condition);
         });
 
+
         conditionStepRepository.save(conditionStep);
     }
 
-    public void updateProcessDefinition(ProcessDefinitionDTO processDefinitionDTO) {
-        ProcessDefinition processDefinition = processDefinitionRepository.findAll()
-                .stream().findFirst()
-                .orElseThrow(() -> new EntityNotFoundException("No process definition found to update."));
 
-        clearAllProcessSteps();
-        processDefinition.setName(processDefinitionDTO.getName());
-        ProcessDefinition savedProcessDefinition = processDefinitionRepository.save(processDefinition);
+    @Transactional
+    public void updateProcessDefinition(ProcessDefinitionDTO dto) {
+        ProcessDefinition definition = processDefinitionRepository.findById(dto.getId())
+                .orElseThrow(() -> new EntityNotFoundException("ProcessDefinition not found"));
 
-        saveProcessSteps(savedProcessDefinition, processDefinitionDTO);
-        updateCurrentStepOfProcessInstance(savedProcessDefinition);
+        definition.setName(dto.getName());
+        definition.setFormSchemaId(dto.getFormId());
+
+        Map<Long, ProcessStepDTO> incomingStepMap = dto.getSteps().stream()
+                .filter(step -> step.getId() != null)
+                .collect(Collectors.toMap(ProcessStepDTO::getId, step -> step));
+
+        // Remove and update
+        Iterator<ProcessStep> iterator = definition.getSteps().iterator();
+        while (iterator.hasNext()) {
+            ProcessStep existingStep = iterator.next();
+            if (incomingStepMap.containsKey(existingStep.getId())) {
+                updateExistingStep(existingStep, incomingStepMap.get(existingStep.getId()));
+            } else {
+                iterator.remove();
+                processStepRepository.delete(existingStep); // Make sure it's gone from DB and memory
+            }
+        }
+
+        // Add new steps
+        dto.getSteps().stream()
+                .filter(step -> step.getId() == null)
+                .forEach(stepDTO -> {
+                    String newStepName = stepDTO.getName();
+                    boolean exists = definition.getSteps().stream()
+                            .anyMatch(s -> s.getName().equalsIgnoreCase(newStepName));
+                    if (!exists) {
+                        ProcessStep newStep = mapper.convertStepDTOToEntity(stepDTO, definition);
+                        definition.getSteps().add(newStep); // JPA will save with cascade
+                    }
+                });
+
+        processDefinitionRepository.save(definition);
     }
 
-    private void clearAllProcessSteps() {
-        processStepRepository.deleteAll();
-        approvalStepRepository.deleteAll();
-        conditionStepRepository.deleteAll();
-        notificationStepRepository.deleteAll();
+    private void updateExistingStep(ProcessStep entity, ProcessStepDTO dto) {
+        entity.setName(dto.getName());
+        entity.setFormId(dto.getFormId());
+
+        if (entity instanceof ApprovalStep approvalStep && dto.getStepType().equals("APPROVAL")) {
+            approvalStep.setValidatorRoles(dto.getValidatorRoles());
+            approvalStep.setRequiredApproval(dto.getRequiredApproval());
+        }
+
+        if (entity instanceof NotificationStep notificationStep && dto.getStepType().equals("NOTIFY") ){
+            notificationStep.setRecipients(dto.getRecipients());
+            notificationStep.setMessage(dto.getMessage());
+        }
+
+        if (entity instanceof ConditionStep conditionStep && dto.getStepType().equals("CONDITION")) {
+            // Supprimer anciennes conditions
+            conditionStep.getConditions().clear();
+            // Recréer les nouvelles conditions
+            List<Condition> updatedConditions = dto.getCondition().stream()
+                    .map(mapper::conditionDTOToEntity)
+                    .peek(cond -> cond.setConditionStep(conditionStep))
+                    .collect(Collectors.toList());
+
+            conditionStep.getConditions().addAll(updatedConditions);
+        }
+    }
+
+
+
+
+    private void deleteAllSteps(ProcessDefinition definition) {
+        List<ProcessStep> steps = definition.getSteps();
+
+        processStepRepository.deleteAll(steps);
+
+
     }
 
     private void updateCurrentStepOfProcessInstance(ProcessDefinition processDefinition) {
@@ -254,31 +312,19 @@ public class ProcessService {
         processHistoryRepository.save(processHistory);
     }
 
-    public ProcessDefinitionDTO getProcessDefinition() {
-        ProcessDefinition processDefinition = processDefinitionRepository.findAll().stream()
-                .findFirst().orElse(null);
-
-        return ProcessDefinitionDTO.builder()
+    public List<ProcessDefinitionDTO> getAllProcessDefinition() {
+        return  processDefinitionRepository.findAll().stream().map(processDefinition->ProcessDefinitionDTO.builder()
                 .id(processDefinition.getId())
+                .formId(processDefinition.getFormSchemaId())
                 .name(processDefinition.getName())
                 .steps(processDefinition.getSteps().stream()
                         .map(mapper::convertStepEntityToDTO)
                         .toList())
-                .build();
+                .build()).toList();
     }
 
-    public List<ProcessHistoryDTO> getProcessHistory() {
-        String currentUserId = keycloakSecurityUtil.getCurrentUserId();
-        ProcessInstance processInstance = processInstanceRepository.findByActorIdAndStatus(currentUserId, ProcessStatus.PENDING);
 
-        return Optional.ofNullable(processInstance)
-                .map(pi -> pi.getHistory().stream()
-                        .map(mapper::processHistoryToDTO)
-                        .collect(Collectors.toList()))
-                .orElse(Collections.emptyList());
-    }
-
-    public List<ReportDTO> getAllReports() {
+    public List<ReportDTO> getAllCurrentUserReport() {
         String processDefinitionName = processDefinitionRepository.findAll().stream()
                 .findFirst()
                 .map(ProcessDefinition::getName)
@@ -292,6 +338,9 @@ public class ProcessService {
 
     private ReportDTO buildReportDTO(ProcessInstance processInstance, String processDefinitionName) {
         return new ReportDTO.ReportDTOBuilder()
+                .processDefinitionName(processInstance.getProcessDefinition().getName())
+                .username(keycloakSecurityUtil.getUserNameById(processInstance.getActorId()))
+                .currentStatus(processInstance.getStatus())
                 .processInstanceId(processInstance.getId())
                 .processName(processDefinitionName)
                 .processHistoryDTOList(processInstance.getHistory().stream()
@@ -320,5 +369,27 @@ public class ProcessService {
         if (!stepExists) {
             throw new EntityNotFoundException("Process step not found: " + stepName);
         }
+    }
+
+    public List<ReportDTO> getAllReports() {
+        String processDefinitionName = processDefinitionRepository.findAll().stream()
+                .findFirst()
+                .map(ProcessDefinition::getName)
+                .orElse("Unknown Process");
+
+
+
+        return processInstanceRepository.findAll().stream()
+                .map(processInstance -> buildReportDTO(processInstance, processDefinitionName))
+                .collect(Collectors.toList());
+
+    }
+
+    public void saveAllProcessDefinition(List<ProcessDefinitionDTO> processDefinitionsDTO) {
+        processDefinitionsDTO.forEach(this::saveProcessDefinition);
+    }
+
+    public void updateAllProcessDefinition(List<ProcessDefinitionDTO> processDefinitionsDTO) {
+        processDefinitionsDTO.forEach(this::updateProcessDefinition);
     }
 }

@@ -20,7 +20,6 @@ public class ApprovalStep extends ProcessStep {
     @CollectionTable(name = "approval_step_roles", joinColumns = @JoinColumn(name = "approval_step_id" ))
     @Column(name = "role" )
     private List<String> validatorRoles;
-
     @Column(length = 500)
     private String requiredApproval;
 }

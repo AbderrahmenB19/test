@@ -8,7 +8,7 @@ import org.mapstruct.factory.Mappers;
 @Mapper
 public interface ProcessMapper {
     //ProcessMapper INSTANCE = Mappers.getMapper(ProcessMapper.class);
-//
+    //
     //ProcessDefinitionResponseDTO toProcessDefinitionResponseDTO(ProcessDefinition processDefinition);
     //ProcessStepDTO toProcessStepDTO(ProcessStep processStep);
     //NotificationStepDTO toNotificationStepDTO(NotificationStep notificationStep);
