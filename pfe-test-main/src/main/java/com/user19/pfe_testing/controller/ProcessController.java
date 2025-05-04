@@ -3,6 +3,7 @@ package com.user19.pfe_testing.controller;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.user19.pfe_testing.dto.ProcessDefinitionDTO;
+import com.user19.pfe_testing.dto.ProcessInstanceDTO;
 import com.user19.pfe_testing.dto.ReportDTO;
 import com.user19.pfe_testing.repository.ProcessStepRepository;
 import com.user19.pfe_testing.service.ProcessService;
@@ -35,9 +36,20 @@ public class ProcessController {
         return ResponseEntity.ok("ur request cancelled successfully");
 
     }
+    @GetMapping("/request/{id}")
+    public ResponseEntity<ProcessInstanceDTO> getRequest(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(processService.getRequestById(id));
+    }
     @GetMapping("/process-definition")
     public ResponseEntity<List<ProcessDefinitionDTO>> getAllProcessDefinition() {
         List<ProcessDefinitionDTO> response = processService.getAllProcessDefinition();
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        return ResponseEntity.ok(response);
+    }
+    @GetMapping("/process-definition/{id}")
+    public ResponseEntity<ProcessDefinitionDTO> getProcessDefinitionById(@PathVariable("id") Long id) {
+        ProcessDefinitionDTO response = processService.getProcessDefinitionById(id);
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         return ResponseEntity.ok(response);

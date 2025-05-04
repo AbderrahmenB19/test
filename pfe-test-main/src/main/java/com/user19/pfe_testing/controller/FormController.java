@@ -56,6 +56,12 @@ public class FormController {
         System.out.println(formSchemaDTO.getJsonSchema());
         return ResponseEntity.ok("Form schema updated successfully.");
     }
+    @DeleteMapping("/form-schema/{id}")
+    public ResponseEntity<String> deleteFormSchema(@PathVariable("id") Long id) {
+        formService.deleteFormById(id);
+        return ResponseEntity.ok("Form schema deleted successfully.");
+
+    }
 
 
 

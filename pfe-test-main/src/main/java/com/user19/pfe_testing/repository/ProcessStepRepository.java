@@ -15,9 +15,7 @@ public interface ProcessStepRepository extends JpaRepository<ProcessStep,Long> {
 
 
 
-    ProcessStep findByName(String currentStepName);
+    ProcessStep findByNameAndProcessDefinition(String currentStepName,ProcessDefinition processDefinition);
 
-    List<ProcessStep> findByProcessDefinition(ProcessDefinition processDefinition);
 
-    boolean existsByName(String name);
 }

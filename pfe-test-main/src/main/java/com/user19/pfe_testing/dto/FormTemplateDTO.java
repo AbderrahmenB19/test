@@ -1,21 +1,15 @@
 package com.user19.pfe_testing.dto;
 
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
-import java.util.List;
 @Getter
 @Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProcessDefinitionDTO {
-    private Long id;
+public class FormTemplateDTO {
+    private Long id ;
     private String name;
-    private FormTemplateDTO formTemplate;
-    private List<ProcessStepDTO> steps;
-
 }
-

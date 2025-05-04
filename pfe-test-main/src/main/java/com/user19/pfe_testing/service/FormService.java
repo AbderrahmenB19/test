@@ -45,4 +45,8 @@ public class FormService {
     public List<FormSchemaDTO> getAllFormSchema() {
         return formSchemaRepository.findAll().stream().map(mapper::formSchemaToDTO).toList();
     }
+
+    public void deleteFormById(Long id) {
+        formSchemaRepository.deleteById(id);
+    }
 }

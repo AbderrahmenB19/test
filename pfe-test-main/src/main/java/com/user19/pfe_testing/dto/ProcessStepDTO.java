@@ -15,7 +15,7 @@ public class ProcessStepDTO {
     private Long id;
     private String name;
     private String stepType;//NOTIFY,APPROVAL,CONDITION
-    private Long formId;
+    private FormTemplateDTO formTemplate;
     private List<String> validatorRoles;
     private String requiredApproval; //ANY,ALL,number for validator need
     private List<ConditionDTO> condition;

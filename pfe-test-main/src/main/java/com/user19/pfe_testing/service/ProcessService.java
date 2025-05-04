@@ -35,6 +35,7 @@ public class ProcessService {
     private final NotificationStepRepository notificationStepRepository;
     private final ConditionStepRepository conditionStepRepository;
     private final ConditionEvaluator conditionEvaluator;
+    private final FormSchemaRepository formSchemaRepository;
 
 
     @Transactional
@@ -54,7 +55,7 @@ public class ProcessService {
                 .build();
 
         ProcessInstance savedProcessInstance = processInstanceRepository.save(processInstance);
-        addProcessHistory(processInstance, ProcessStatus.STARTED.name(), currentUserId, null, ProcessStatus.PENDING);
+        addProcessHistory(processInstance, ProcessStatus.STARTED.name(), currentUserId, null, ProcessStatus.APPROVED);
         handleFirstStep(savedProcessInstance.getId());
     }
 
@@ -67,7 +68,7 @@ public class ProcessService {
             return;
         }
 
-        ProcessStep currentProcessStep = processStepRepository.findByName(currentStepName);
+        ProcessStep currentProcessStep = processStepRepository.findByNameAndProcessDefinition(currentStepName, processInstance.getProcessDefinition());
         executeStepAction(currentProcessStep, processInstance);
     }
 
@@ -80,7 +81,7 @@ public class ProcessService {
             return;
         }
 
-        ProcessStep currentProcessStep = processStepRepository.findByName(currentStepName);
+        ProcessStep currentProcessStep = processStepRepository.findByNameAndProcessDefinition(currentStepName, processInstance.getProcessDefinition());
         executeStepAction(currentProcessStep, processInstance);
         updateToNextStep(processInstance, currentProcessStep.getName());
     }
@@ -131,7 +132,7 @@ public class ProcessService {
 
     private void updateToNextStep(ProcessInstance processInstance, String previousStepName) {
         List<ProcessStep> processSteps = processInstance.getProcessDefinition().getSteps();
-        int nextStepIndex = processSteps.indexOf(processStepRepository.findByName(previousStepName)) + 1;
+        int nextStepIndex = processSteps.indexOf(processStepRepository.findByNameAndProcessDefinition(previousStepName, processInstance.getProcessDefinition())) + 1;
         processInstance.setCurrentStepName(processSteps.get(nextStepIndex).getName());
         processInstanceRepository.save(processInstance);
     }
@@ -139,7 +140,7 @@ public class ProcessService {
     public void saveProcessDefinition(ProcessDefinitionDTO processDefinitionDTO) {
         ProcessDefinition processDefinition = ProcessDefinition.builder()
                 .name(processDefinitionDTO.getName())
-                .formSchemaId(processDefinitionDTO.getFormId())
+                .formSchemaId(processDefinitionDTO.getFormTemplate().getId())
                 .build();
 
         ProcessDefinition savedDefinition = processDefinitionRepository.save(processDefinition);
@@ -190,7 +191,7 @@ public class ProcessService {
                 .orElseThrow(() -> new EntityNotFoundException("ProcessDefinition not found"));
 
         definition.setName(dto.getName());
-        definition.setFormSchemaId(dto.getFormId());
+        definition.setFormSchemaId(dto.getFormTemplate().getId());
 
         Map<Long, ProcessStepDTO> incomingStepMap = dto.getSteps().stream()
                 .filter(step -> step.getId() != null)
@@ -226,11 +227,11 @@ public class ProcessService {
 
     private void updateExistingStep(ProcessStep entity, ProcessStepDTO dto) {
         entity.setName(dto.getName());
-        entity.setFormId(dto.getFormId());
 
         if (entity instanceof ApprovalStep approvalStep && dto.getStepType().equals("APPROVAL")) {
             approvalStep.setValidatorRoles(dto.getValidatorRoles());
             approvalStep.setRequiredApproval(dto.getRequiredApproval());
+            approvalStep.setFormId(dto.getFormTemplate().getId());
         }
 
         if (entity instanceof NotificationStep notificationStep && dto.getStepType().equals("NOTIFY") ){
@@ -254,24 +255,6 @@ public class ProcessService {
 
 
 
-    private void deleteAllSteps(ProcessDefinition definition) {
-        List<ProcessStep> steps = definition.getSteps();
-
-        processStepRepository.deleteAll(steps);
-
-
-    }
-
-    private void updateCurrentStepOfProcessInstance(ProcessDefinition processDefinition) {
-        List<ProcessInstance> filteredProcessInstances = filterProcessInstancesWithInvalidSteps(processDefinition);
-        if (!filteredProcessInstances.isEmpty()) {
-            for (ProcessInstance process : filteredProcessInstances) {
-                List<ProcessHistory> processHistories = process.getHistory();
-                String lastValidStep = getLastValidStepFromHistory(processHistories, processDefinition);
-                updateToNextStep(process, lastValidStep);
-            }
-        }
-    }
 
     private String getLastValidStepFromHistory(List<ProcessHistory> processHistories, ProcessDefinition processDefinition) {
         List<String> validStepNames = processDefinition.getSteps()
@@ -315,7 +298,10 @@ public class ProcessService {
     public List<ProcessDefinitionDTO> getAllProcessDefinition() {
         return  processDefinitionRepository.findAll().stream().map(processDefinition->ProcessDefinitionDTO.builder()
                 .id(processDefinition.getId())
-                .formId(processDefinition.getFormSchemaId())
+                .formTemplate( FormTemplateDTO.builder()
+                        .name(formSchemaRepository.findById(processDefinition.getFormSchemaId()).get().getName())
+                        .id(processDefinition.getFormSchemaId())
+                                .build())
                 .name(processDefinition.getName())
                 .steps(processDefinition.getSteps().stream()
                         .map(mapper::convertStepEntityToDTO)
@@ -391,5 +377,29 @@ public class ProcessService {
 
     public void updateAllProcessDefinition(List<ProcessDefinitionDTO> processDefinitionsDTO) {
         processDefinitionsDTO.forEach(this::updateProcessDefinition);
+    }
+
+    public ProcessInstanceDTO getRequestById(Long id) {
+        ProcessInstance processInstance = processInstanceRepository.findById(id).orElseThrow(()->new EntityNotFoundException("Process Instance not found: " + id));
+        Long formSchemaId= processInstance.getProcessDefinition().getFormSchemaId();
+        return mapper.processInstanceToDTO(processInstance, formSchemaId);
+    }
+
+    public ProcessDefinitionDTO getProcessDefinitionById(Long id) {
+         ProcessDefinition processDefinition = processDefinitionRepository.findById(id).orElseThrow(()->
+                 new EntityNotFoundException("Process Definition not found: " + id));
+         return ProcessDefinitionDTO.builder()
+                 .id(processDefinition.getId())
+                 .formTemplate( FormTemplateDTO.builder()
+                         .name(formSchemaRepository.findById(processDefinition.getFormSchemaId()).get().getName())
+                         .id(processDefinition.getFormSchemaId())
+                         .build())
+                 .name(processDefinition.getName())
+                 .steps(processDefinition.getSteps().stream()
+                         .map(mapper::convertStepEntityToDTO)
+                         .toList())
+                 .build();
+
+
     }
 }

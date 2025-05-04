@@ -14,7 +14,6 @@ import java.util.List;
 public class ReportDTO {
     private String username;
     private Long processInstanceId;
-
     private String processName;
     private LocalDateTime startTime;
     private List<ProcessHistoryDTO> processHistoryDTOList;

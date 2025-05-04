@@ -17,12 +17,12 @@ public class Mapper {
 
 
     public ProcessStep convertStepDTOToEntity(ProcessStepDTO stepDTO, ProcessDefinition processDefinition) {
-        System.out.println(stepDTO.getFormId());
+
         switch (stepDTO.getStepType()) {
             case "APPROVAL":
                 ApprovalStep approvalStep = new ApprovalStep();
                 if (stepDTO.getId()!=null)   approvalStep.setId(stepDTO.getId());
-                approvalStep.setFormId(stepDTO.getFormId());
+                approvalStep.setFormId(stepDTO.getFormTemplate().getId());
                 approvalStep.setName(stepDTO.getName());
                 approvalStep.setValidatorRoles(stepDTO.getValidatorRoles());
                 String requiredApproval= stepDTO.getRequiredApproval();
@@ -38,7 +38,7 @@ public class Mapper {
 
                 ConditionStep conditionStep = new ConditionStep();
                 if (stepDTO.getId()!=null)  conditionStep.setId(stepDTO.getId());
-                conditionStep.setFormId(stepDTO.getFormId());
+
                 conditionStep.setName(stepDTO.getName());
 
                 conditionStep.setProcessDefinition(processDefinition);
@@ -50,7 +50,7 @@ public class Mapper {
                 NotificationStep notificationStep = new NotificationStep();
                 if (stepDTO.getId()!=null)  notificationStep.setId(stepDTO.getId());
                 notificationStep.setName(stepDTO.getName());
-                notificationStep.setFormId(stepDTO.getFormId());
+
                 notificationStep.setRecipients(stepDTO.getRecipients());
                 notificationStep.setMessage(stepDTO.getMessage());
                 notificationStep.setProcessDefinition(processDefinition);

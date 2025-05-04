@@ -2,10 +2,7 @@ package com.user19.pfe_testing.service;
 
 import com.user19.pfe_testing.dto.ProcessInstanceDTO;
 import com.user19.pfe_testing.mapper.Mapper;
-import com.user19.pfe_testing.model.ApprovalStep;
-import com.user19.pfe_testing.model.ProcessHistory;
-import com.user19.pfe_testing.model.ProcessInstance;
-import com.user19.pfe_testing.model.ProcessStep;
+import com.user19.pfe_testing.model.*;
 import com.user19.pfe_testing.model.enums.ProcessStatus;
 import com.user19.pfe_testing.repository.*;
 import com.user19.pfe_testing.util.KeycloakSecurityUtil;
@@ -35,7 +32,7 @@ public class ValidationService {
                 .filter(p->p.getStatus() == ProcessStatus.PENDING)
                 .filter(process -> isValidatorOfCurrentStep(getCurrentStepFromProcess(process), process))
                 .map(e->{
-                    ApprovalStep approvalStep = approvalStepRepository.findByName(e.getCurrentStepName()).orElseThrow(()-> new EntityNotFoundException("ApprovalStep not found"));
+                    ApprovalStep approvalStep = approvalStepRepository.findByNameAndProcessDefinition(e.getCurrentStepName(),e.getProcessDefinition()).orElseThrow(()-> new EntityNotFoundException("ApprovalStep not found"));
                     Long formId = approvalStep.getFormId();
                     return mapper.processInstanceToDTO(e, formId);
 
@@ -46,7 +43,7 @@ public class ValidationService {
 
     public void approve(Long processInstanceId) {
         ProcessInstance processInstance = getProcessInstanceById(processInstanceId);
-        ApprovalStep currentApprovalStep = getApprovalStepByName(processInstance.getCurrentStepName());
+        ApprovalStep currentApprovalStep = getApprovalStepByName(processInstance.getCurrentStepName(), processInstance.getProcessDefinition());
 
         String actorId = keycloakSecurityUtil.getCurrentUserId();
         String action = currentApprovalStep.getName();
@@ -61,7 +58,7 @@ public class ValidationService {
 
     public void reject(Long processInstanceId, String comment) {
         ProcessInstance processInstance = getProcessInstanceById(processInstanceId);
-        ApprovalStep currentApprovalStep = getApprovalStepByName(processInstance.getCurrentStepName());
+        ApprovalStep currentApprovalStep = getApprovalStepByName(processInstance.getCurrentStepName(), processInstance.getProcessDefinition());
 
         String actorId = keycloakSecurityUtil.getCurrentUserId();
         String action = currentApprovalStep.getName();
@@ -87,13 +84,13 @@ public class ValidationService {
                 .orElseThrow(() -> new EntityNotFoundException("Process instance not found: " + processInstanceId));
     }
 
-    private ApprovalStep getApprovalStepByName(String stepName) {
-        return approvalStepRepository.findByName(stepName)
+    private ApprovalStep getApprovalStepByName(String stepName , ProcessDefinition processDefinition) {
+        return approvalStepRepository.findByNameAndProcessDefinition(stepName, processDefinition)
                 .orElseThrow(() -> new EntityNotFoundException("Approval step not found: " + stepName));
     }
 
     private ProcessStep getCurrentStepFromProcess(ProcessInstance processInstance) {
-        return processStepRepository.findByName(processInstance.getCurrentStepName());
+        return processStepRepository.findByNameAndProcessDefinition(processInstance.getCurrentStepName(), processInstance.getProcessDefinition());
     }
 
     private boolean isValidatorOfCurrentStep(ProcessStep processStep, ProcessInstance processInstance) {
@@ -129,8 +126,10 @@ public class ValidationService {
     private List<ProcessInstanceDTO> getProcessInstancesByValidatorAndStatus(String currentUserId, ProcessStatus status) {
         return processHistoryRepository.findByActorIdAndActionStatus(currentUserId, status).stream()
                 .map(e->{
-                    ApprovalStep approvalStep = approvalStepRepository.findByName(e.getAction()).orElseThrow(()->new EntityNotFoundException("Approval step not found"));
+
+                    ApprovalStep approvalStep = approvalStepRepository.findByNameAndProcessDefinition(e.getAction(),e.getProcessInstance().getProcessDefinition()).orElseThrow(()->new EntityNotFoundException("Approval step not found" + e.getAction()));
                     Long formId = approvalStep.getFormId();
+
                     return mapper.processInstanceToDTO(e.getProcessInstance(), formId);
                 })
 
