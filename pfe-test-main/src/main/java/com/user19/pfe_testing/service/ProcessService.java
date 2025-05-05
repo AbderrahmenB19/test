@@ -311,14 +311,11 @@ public class ProcessService {
 
 
     public List<ReportDTO> getAllCurrentUserReport() {
-        String processDefinitionName = processDefinitionRepository.findAll().stream()
-                .findFirst()
-                .map(ProcessDefinition::getName)
-                .orElse("Unknown Process");
+
 
         String currentUserId = keycloakSecurityUtil.getCurrentUserId();
         return processInstanceRepository.findByActorId(currentUserId).stream()
-                .map(processInstance -> buildReportDTO(processInstance, processDefinitionName))
+                .map(processInstance -> buildReportDTO(processInstance, processInstance.getProcessDefinition().getName()))
                 .collect(Collectors.toList());
     }
 
