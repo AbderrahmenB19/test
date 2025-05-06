@@ -63,10 +63,7 @@ public class ProcessService {
         ProcessInstance processInstance = getProcessInstanceById(processInstanceId);
         String currentStepName = processInstance.getCurrentStepName();
 
-        if (isLastStep(currentStepName, processInstance)) {
-            handleLastStep(processInstance);
-            return;
-        }
+       
 
         ProcessStep currentProcessStep = processStepRepository.findByNameAndProcessDefinition(currentStepName, processInstance.getProcessDefinition());
         executeStepAction(currentProcessStep, processInstance);
@@ -99,6 +96,7 @@ public class ProcessService {
     private void handleLastStep(ProcessInstance processInstance) {
         String clientName = keycloakSecurityUtil.getCurrentUserName(processInstance.getActorId());
         String clientEmail = keycloakSecurityUtil.getCurrentUserEmail(processInstance.getActorId());
+        processInstance.setStatus(ProcessStatus.APPROVED);
         emailService.notifyClient(clientEmail, clientName, ProcessStatus.COMPLETED.name());
     }
 
@@ -256,31 +254,7 @@ public class ProcessService {
 
 
 
-    private String getLastValidStepFromHistory(List<ProcessHistory> processHistories, ProcessDefinition processDefinition) {
-        List<String> validStepNames = processDefinition.getSteps()
-                .stream()
-                .map(ProcessStep::getName)
-                .toList();
 
-        for (int i = processHistories.size() - 1; i >= 0; i--) {
-            String action = processHistories.get(i).getAction();
-            if (validStepNames.contains(action)) {
-                return action;
-            }
-        }
-
-        return validStepNames.isEmpty() ? null : validStepNames.get(0);
-    }
-
-    private List<ProcessInstance> filterProcessInstancesWithInvalidSteps(ProcessDefinition processDefinition) {
-        List<String> validStepNames = processStepRepository.findAll().stream()
-                .map(ProcessStep::getName)
-                .toList();
-
-        return processInstanceRepository.findAll().stream()
-                .filter(instance -> !validStepNames.contains(instance.getCurrentStepName()))
-                .toList();
-    }
 
     public void addProcessHistory(ProcessInstance processInstance, String action, String actorId,
                                   String comment, ProcessStatus actionStatus) {
