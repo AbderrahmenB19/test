@@ -17,5 +17,6 @@ public class ProcessDefinitionDTO {
     private FormTemplateDTO formTemplate;
     private List<ProcessStepDTO> steps;
 
+
 }
 

@@ -63,10 +63,9 @@ public class ProcessService {
         ProcessInstance processInstance = getProcessInstanceById(processInstanceId);
         String currentStepName = processInstance.getCurrentStepName();
 
-       
-
         ProcessStep currentProcessStep = processStepRepository.findByNameAndProcessDefinition(currentStepName, processInstance.getProcessDefinition());
         executeStepAction(currentProcessStep, processInstance);
+
     }
 
     public void moveToNextStep(Long processInstanceId) {
@@ -86,8 +85,11 @@ public class ProcessService {
     private void executeStepAction(ProcessStep currentProcessStep, ProcessInstance processInstance) {
         if (currentProcessStep instanceof NotificationStep) {
             handleNotificationStep((NotificationStep) currentProcessStep);
+            updateToNextStep(processInstance, currentProcessStep.getName());
+
         } else if (currentProcessStep instanceof ConditionStep) {
             handleConditionStep((ConditionStep) currentProcessStep, processInstance);
+
         } else if (currentProcessStep instanceof ApprovalStep) {
             handleApprovalStep((ApprovalStep) currentProcessStep);
         }
@@ -102,6 +104,7 @@ public class ProcessService {
 
     private void handleNotificationStep(NotificationStep notificationStep) {
         emailService.notifyReciptients(notificationStep);
+
     }
 
     private void handleConditionStep(ConditionStep conditionStep, ProcessInstance processInstance) {
@@ -120,8 +123,11 @@ public class ProcessService {
     private void updateCurrentStepFromCondition(Long processInstanceId, String stepName) {
         ProcessInstance processInstance = getProcessInstanceById(processInstanceId);
         validateStepExists(processInstance, stepName);
+
         processInstance.setCurrentStepName(stepName);
         processInstanceRepository.save(processInstance);
+        executeStepAction(processInstance.getProcessDefinition()
+                .getSteps().stream().filter(step-> step.getName().equals(stepName)).findFirst().get(), processInstance);
     }
 
     private boolean isLastStep(String currentStepName, ProcessInstance processInstance) {
@@ -133,6 +139,7 @@ public class ProcessService {
         int nextStepIndex = processSteps.indexOf(processStepRepository.findByNameAndProcessDefinition(previousStepName, processInstance.getProcessDefinition())) + 1;
         processInstance.setCurrentStepName(processSteps.get(nextStepIndex).getName());
         processInstanceRepository.save(processInstance);
+        executeStepAction(processSteps.get(nextStepIndex), processInstance);
     }
 
     public void saveProcessDefinition(ProcessDefinitionDTO processDefinitionDTO) {
@@ -194,8 +201,8 @@ public class ProcessService {
         Map<Long, ProcessStepDTO> incomingStepMap = dto.getSteps().stream()
                 .filter(step -> step.getId() != null)
                 .collect(Collectors.toMap(ProcessStepDTO::getId, step -> step));
+       
 
-        // Remove and update
         Iterator<ProcessStep> iterator = definition.getSteps().iterator();
         while (iterator.hasNext()) {
             ProcessStep existingStep = iterator.next();
@@ -207,7 +214,6 @@ public class ProcessService {
             }
         }
 
-        // Add new steps
         dto.getSteps().stream()
                 .filter(step -> step.getId() == null)
                 .forEach(stepDTO -> {
@@ -216,7 +222,7 @@ public class ProcessService {
                             .anyMatch(s -> s.getName().equalsIgnoreCase(newStepName));
                     if (!exists) {
                         ProcessStep newStep = mapper.convertStepDTOToEntity(stepDTO, definition);
-                        definition.getSteps().add(newStep); // JPA will save with cascade
+                        definition.getSteps().add(newStep); 
                     }
                 });
 
@@ -238,13 +244,11 @@ public class ProcessService {
         }
 
         if (entity instanceof ConditionStep conditionStep && dto.getStepType().equals("CONDITION")) {
-            // Supprimer anciennes conditions
             conditionStep.getConditions().clear();
-            // Recréer les nouvelles conditions
             List<Condition> updatedConditions = dto.getCondition().stream()
                     .map(mapper::conditionDTOToEntity)
                     .peek(cond -> cond.setConditionStep(conditionStep))
-                    .collect(Collectors.toList());
+                    .toList();
 
             conditionStep.getConditions().addAll(updatedConditions);
         }

@@ -2,6 +2,7 @@ package com.user19.pfe_testing.dto;
 
 
 import lombok.*;
+import org.eclipse.microprofile.config.inject.ConfigProperties;
 
 import java.time.LocalDateTime;
 
@@ -10,7 +11,6 @@ import java.time.LocalDateTime;
 @Builder
 @Getter
 @Setter
-
 public class FormSchemaDTO{
     private Long id;
     private String jsonSchema;

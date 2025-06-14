@@ -58,4 +58,13 @@ public class KeycloakSecurityUtil {
     public String getUserNameById(String actorId) {
         return keycloak.realm(realm_name).users().get(actorId).toRepresentation().getUsername();
     }
+
+    public List<String> getAllRoles() {
+        List<String> defaultRoles = List.of("offline_access", "uma_authorization", "realm-management", "default-roles-pfe", "VALIDATOR");
+
+        return keycloak.realm(realm_name).roles().list().stream()
+                .map(role -> role.getName())
+                .filter(roleName -> !defaultRoles.contains(roleName))
+                .toList();
+    }
 }
