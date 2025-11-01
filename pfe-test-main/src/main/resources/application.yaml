@@ -30,8 +30,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: abderrahmenbennacer622@gmail.com
-    password: ptjfehjuqzmiyfuk
+    username: // put ur gmail
+    password: // put ur application password from gmail
     properties:
       mail:
         smtp:
@@ -48,7 +48,7 @@ keycloak:
   realm: pfe
   resource: pfe-backend-client
   credentials:
-    secret: ZxPYUmr6zEEDGGCinjz1Hinpqi6GoNid
+    secret: // secret
 
   use-resource-role-mappings: true
 server:
